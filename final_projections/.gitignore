@@ -1,0 +1,5 @@
+*.mat
+*.png
+r20*
+!Kdistribution_17feb.mat
+!Ksamples.mat
