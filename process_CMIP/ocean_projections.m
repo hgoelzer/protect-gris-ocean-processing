@@ -1,5 +1,7 @@
 % script to generate CMIP5 ocean forcings
-clear; close all;
+%clear; close all;
+
+clearvars -except modelid 
 
 % modelid = 1 for MIROC5 RCP8.5
 % modelid = 2 for MIROC5 RCP2.6
@@ -17,13 +19,21 @@ clear; close all;
 % modelid = 14 for CNRM-CM6-1 ssp585
 % modelid = 15 for CNRM-CM6-1 ssp126
 % modelid = 16 for CNRM-ESM2-1 ssp585
-% modelid = 17 for UKESM1-0-LL ssp585
-% modelid = 18 for CESM2 ssp585
+% modelid = 17 for UKESM1-0-LL-Robin ssp585
+% modelid = 18 for CESM2-Leo ssp585
+
 % modelid = 19 for NorESM2 ssp585
-% modelid = 20 for MPI-ESM1-2-HR ssp585
-% modelid = 21 for MPI-ESM1-2-HR ssp245
-% modelid = 22 for MPI-ESM1-2-HR ssp126
-modelid = 22;
+% modelid = 20 for NorESM2 ssp245
+% modelid = 21 for MPI-ESM1-2-HR ssp585
+% modelid = 22 for MPI-ESM1-2-HR ssp245
+% modelid = 23 for MPI-ESM1-2-HR ssp126
+% modelid = 24 for CESM2-CM6 ssp585
+% modelid = 25 for CESM2-CM6 ssp245
+% modelid = 26 for CESM2-CM6 ssp126
+% modelid = 27 for UKESM1-0-LL-CMIP6 ssp585
+% modelid = 28 for UKESM1-0-LL-CMIP6 ssp245
+ 
+%modelid = 24;
 
 % freezing point parameters
 l1 = -5.73e-2;
@@ -38,12 +48,11 @@ zreg = [200:25:500];
 [Xreg,Yreg] = meshgrid(xreg,yreg);
 
 %% MIROC5 RCP8.5
-
 if modelid == 1,
 
-% path to MIROC5 RCP8.5 temperature output
+% path to temperature output
 Tfiletoload = '~/Documents/CMIP5/M5histrcp.nc';
-% path to MIROC5 RCP8.5 salinity output
+% path to salinity output
 Sfiletoload = '~/Documents/CMIP5/M5histrcp_so.nc';
 
 % read fields
@@ -147,7 +156,8 @@ TF = squeeze(TF(:,1,:));
 save MIROC5_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -156,12 +166,11 @@ save MIROC5_historical.mat x y TF_historical TF_basins_historical year_historica
 end
 
 %% MIROC5 RCP2.6
-
 if modelid == 2,
 
-% path to MIROC5 RCP2.6temperature output
+% path to temperature output
 Tfiletoload = '~/Desktop/M5rcp26_thetao.nc';
-% path to MIROC5 RCP2.6 salinity output
+% path to  salinity output
 Sfiletoload = '~/Desktop/M5rcp26_so.nc';
 
 % read fields
@@ -273,12 +282,11 @@ save MIROC5_RCP26.mat x y TF TF_basins year
 end
 
 %% NorESM RCP8.5
-
 if modelid == 3,
 
-% path to NorESM RCP8.5 temperature output
+% path to  temperature output
 Tfiletoload = '~/Desktop/NorMhistrcp85_thetao.nc';
-% path to NorESM RCP8.5 salinity output
+% path to  salinity output
 Sfiletoload = '~/Desktop/NorMhistrcp85_so.nc';
 
 % read fields
@@ -353,8 +361,8 @@ load ../final_region_def/ice_ocean_sectors.mat
 % find regular grid points inside ice-ocean basins
 basin = NaN(size(Xreg,1),size(Xreg,2));
 for k=1:7, % since there are 7 basins
-    regions(k).NorESMinds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
-    basin(regions(k).NorESMinds) = k;
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
 end
 
 % get thermal forcing profile per basin per year
@@ -362,7 +370,7 @@ TF_basins_z = NaN(7,length(z),length(year));
 TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
 for jj=1:7,
     for kk=1:length(z),
-        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).NorESMinds,kk,:),1);
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
     end
 end
 
@@ -382,7 +390,8 @@ TF = squeeze(TF(:,1,:));
 save NorESM_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -391,12 +400,11 @@ save NorESM_historical.mat x y TF_historical TF_basins_historical year_historica
 end
 
 %% NorESM RCP2.6
-
 if modelid == 4,
 
-% path to NorESM RCP2.6 temperature output
+% path to  temperature output
 Tfiletoload = '~/Desktop/NorMrcp26_thetao.nc';
-% path to NorESM RCP2.6 salinity output
+% path to  salinity output
 Sfiletoload = '~/Desktop/NorMrcp26_so.nc';
 
 % read fields
@@ -471,8 +479,8 @@ load ../final_region_def/ice_ocean_sectors.mat
 % find regular grid points inside ice-ocean basins
 basin = NaN(size(Xreg,1),size(Xreg,2));
 for k=1:7, % since there are 7 basins
-    regions(k).NorESMinds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
-    basin(regions(k).NorESMinds) = k;
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
 end
 
 % get thermal forcing profile per basin per year
@@ -480,7 +488,7 @@ TF_basins_z = NaN(7,length(z),length(year));
 TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
 for jj=1:7,
     for kk=1:length(z),
-        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).NorESMinds,kk,:),1);
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
     end
 end
 
@@ -505,19 +513,26 @@ TF = cat(2,TF_historical,TF);
 % save
 save NorESM_RCP26.mat x y TF TF_basins year
 
+%% also save historical part of run
+%% note may want to define historical as <2006 for consistency with CMIP5 runs
+%historical_inds = find(year<2014);
+%year_historical = year(historical_inds);
+%TF_historical = TF(:,historical_inds);
+%TF_basins_historical = TF_basins(:,historical_inds);
+%save NorESM_historical.mat x y TF_historical TF_basins_historical year_historical
+
 end
 
 %% HadGEM RCP8.5
 % note processing for HadGEM is a bit different to the others
 % because I had to download the output myself
-
 if modelid == 5,
 
-% path to HadGEM temperature output
+% path to temperature output
 Tfiletoload1 = '~/Documents/HadGEM-ES2/HadGEM2-ES-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/HadGEM-ES2/HadGEM2-ES-RCP85-thetao.mat';
 
-% path to HadGEM salinity output
+% path to salinity output
 Sfiletoload1 = '~/Documents/HadGEM-ES2/HadGEM2-ES-hist-so.mat';
 Sfiletoload2 = '~/Documents/HadGEM-ES2/HadGEM2-ES-RCP85-so.mat';
 
@@ -609,7 +624,8 @@ TF = squeeze(TF(:,1,:));
 save HadGEM_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -620,14 +636,13 @@ end
 %% HadGEM RCP2.6
 % note processing for HadGEM is a bit different to the others
 % because I had to download the output myself
-
 if modelid == 6,
 
-% path to HadGEM temperature output
+% path to  temperature output
 Tfiletoload1 = '~/Documents/HadGEM-ES2/HadGEM2-ES-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/HadGEM-ES2/HadGEM2-ES-RCP26-thetao.mat';
 
-% path to HadGEM salinity output
+% path to  salinity output
 Sfiletoload1 = '~/Documents/HadGEM-ES2/HadGEM2-ES-hist-so.mat';
 Sfiletoload2 = '~/Documents/HadGEM-ES2/HadGEM2-ES-RCP26-so.mat';
 
@@ -721,12 +736,11 @@ save HadGEM_RCP26.mat x y TF TF_basins year
 end
 
 %% IPSLCM RCP8.5
-
 if modelid == 7,
 
-% path to IPSLMR RCP8.5 temperature output
+% path to  temperature output
 Tfiletoload = '~/Desktop/IPSLMRhistrcp85_thetao.nc';
-% path to IPSLMR RCP8.5 salinity output
+% path to  salinity output
 Sfiletoload = '~/Desktop/IPSLMRhistrcp85_so.nc';
 
 % read fields
@@ -839,7 +853,8 @@ TF = squeeze(TF(:,1,:));
 save IPSLCM_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -848,12 +863,11 @@ save IPSLCM_historical.mat x y TF_historical TF_basins_historical year_historica
 end
 
 %% IPSLCM RCP2.6
-
 if modelid == 8,
 
-% path to IPSLCM RCP2.6temperature output
+% path to temperature output
 Tfiletoload = '~/Desktop/IPSLMRrcp26_thetao.nc';
-% path to IPSLCM RCP2.6 salinity output
+% path to  salinity output
 Sfiletoload = '~/Desktop/IPSLMRrcp26_so.nc';
 
 % read fields
@@ -974,12 +988,11 @@ save IPSLCM_RCP26.mat x y TF TF_basins year
 end
 
 %% CSIRO RCP8.5
-
 if modelid == 9,
 
-% path to CSIRO RCP8.5 temperature output
+% path to  temperature output
 Tfiletoload = '~/Desktop/CSIROhistrcp85_thetao.nc';
-% path to CSIRO RCP8.5 salinity output
+% path to salinity output
 Sfiletoload = '~/Desktop/CSIROhistrcp85_so.nc';
 
 % read fields
@@ -1084,7 +1097,8 @@ TF = squeeze(TF(:,1,:));
 save CSIRO_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -1093,12 +1107,11 @@ save CSIRO_historical.mat x y TF_historical TF_basins_historical year_historical
 end
 
 %% CSIRO RCP2.6
-
 if modelid == 10,
 
-% path to CSIRO RCP2.6temperature output
+% path to temperature output
 Tfiletoload = '~/Desktop/CSIROhistrcp26_thetao.nc';
-% path to CSIRO RCP2.6 salinity output
+% path to   salinity output
 Sfiletoload = '~/Desktop/CSIROhistrcp26_so.nc';
 
 % read fields
@@ -1211,12 +1224,11 @@ save CSIRO_RCP26.mat x y TF TF_basins year
 end
 
 %% CNRM RCP8.5
-
 if modelid == 11,
 
-% path to CNRM RCP8.5 temperature output
+% path to  temperature output
 Tfiletoload = '~/Desktop/CNRMhistrcp85_thetao.nc';
-% path to CNRM RCP8.5 salinity output
+% path to  salinity output
 Sfiletoload = '~/Desktop/CNRMhistrcp85_so.nc';
 
 % read fields
@@ -1329,7 +1341,8 @@ TF = squeeze(TF(:,1,:));
 save CNRM_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -1338,12 +1351,11 @@ save CNRM_historical.mat x y TF_historical TF_basins_historical year_historical
 end
 
 %% CNRM RCP2.6
-
 if modelid == 12,
 
-% path to CNRM RCP2.6temperature output
+% path to temperature output
 Tfiletoload = '~/Desktop/CNRMrcp26_thetao.nc';
-% path to CNRM RCP2.6 salinity output
+% path to salinity output
 Sfiletoload = '~/Desktop/CNRMrcp26_so.nc';
 
 % read fields
@@ -1466,14 +1478,13 @@ end
 %% ACCESS RCP8.5
 % note processing for ACCESS is a bit different to the others
 % because I had to download the output myself
-
 if modelid == 13,
 
-% path to ACCESS temperature output
+% path to temperature output
 Tfiletoload1 = '~/Documents/ACCESS1-3/ACCESS1-3-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/ACCESS1-3/ACCESS1-3-RCP85-thetao.mat';
 
-% path to ACCESS salinity output
+% path to salinity output
 Sfiletoload1 = '~/Documents/ACCESS1-3/ACCESS1-3-hist-so.mat';
 Sfiletoload2 = '~/Documents/ACCESS1-3/ACCESS1-3-RCP85-so.mat';
 
@@ -1565,7 +1576,8 @@ TF = squeeze(TF(:,1,:));
 save ACCESS_RCP85.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+% note may want to define historical as <2006 for consistency with CMIP5 runs
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -1577,14 +1589,13 @@ end
 % note processing for CNRM-CM6-1 is a bit different to the others
 % because I had to download the output myself and also because
 % this is a CMIP6 model so the historical period extends to 2014
-
 if modelid == 14,
 
-% path to CNRM-CM6-1 temperature output
+% path to  temperature output
 Tfiletoload1 = '~/Documents/CNRM-CM6/CNRM-CM6-1-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/CNRM-CM6/CNRM-CM6-1-ssp585-thetao.mat';
 
-% path to CNRM-CM6-1 salinity output
+% path to  salinity output
 Sfiletoload1 = '~/Documents/CNRM-CM6/CNRM-CM6-1-hist-so.mat';
 Sfiletoload2 = '~/Documents/CNRM-CM6/CNRM-CM6-1-ssp585-so.mat';
 
@@ -1687,9 +1698,7 @@ TF = squeeze(TF(:,1,:));
 save CNRM-CM6-1_ssp585.mat x y TF TF_basins year
 
 % also save historical part of run
-% note define historical as <2006 for consistency with CMIP5 runs
-% in actuality historical extends to 2014 in CMIP6
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -1701,14 +1710,13 @@ end
 % note processing for CNRM-CM6-1 is a bit different to the others
 % because I had to download the output myself and also because
 % this is a CMIP6 model so the historical period extends to 2014
-
 if modelid == 15,
 
-% path to CNRM-CM6-1 temperature output
+% path to  temperature output
 Tfiletoload1 = '~/Documents/CNRM-CM6/CNRM-CM6-1-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/CNRM-CM6/CNRM-CM6-1-ssp126-thetao.mat';
 
-% path to CNRM-CM6-1 salinity output
+% path to  salinity output
 Sfiletoload1 = '~/Documents/CNRM-CM6/CNRM-CM6-1-hist-so.mat';
 Sfiletoload2 = '~/Documents/CNRM-CM6/CNRM-CM6-1-ssp126-so.mat';
 
@@ -1818,11 +1826,11 @@ end
 % this is a CMIP6 model so the historical period extends to 2014
 if modelid == 16,
 
-% path to CNRM-ESM2-1 temperature output
+% path to  temperature output
 Tfiletoload1 = '~/Documents/CNRM-ESM2-1/CNRM-ESM2-1-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/CNRM-ESM2-1/CNRM-ESM2-1-ssp585-thetao.mat';
 
-% path to CNRM-ESM2-1 salinity output
+% path to  salinity output
 Sfiletoload1 = '~/Documents/CNRM-ESM2-1/CNRM-ESM2-1-hist-so.mat';
 Sfiletoload2 = '~/Documents/CNRM-ESM2-1/CNRM-ESM2-1-ssp585-so.mat';
 
@@ -1925,9 +1933,7 @@ TF = squeeze(TF(:,1,:));
 save CNRM-ESM2-1_ssp585.mat x y TF TF_basins year
 
 % also save historical part of run
-% note define historical as <2006 for consistency with CMIP5 runs
-% in actuality historical extends to 2014 in CMIP6
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -1935,17 +1941,17 @@ save CNRM-ESM2-1_historical.mat x y TF_historical TF_basins_historical year_hist
 
 end
 
-%% UKESM1-0-LL ssp585
+%% UKESM1-0-LL-Robin ssp585
 % note processing for UKESM1-0-LL is a bit different to the others
 % because I had to download the output myself and also because
 % this is a CMIP6 model so the historical period extends to 2014
 if modelid == 17,
 
-% path to UKESM1-0-LL temperature output
+% path to temperature output
 Tfiletoload1 = '~/Documents/UKESM1-0-LL/UKESM1-0-LL-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/UKESM1-0-LL/UKESM1-0-LL-ssp585-thetao.mat';
 
-% path to UKESM1-0-LL salinity output
+% path to salinity output
 Sfiletoload1 = '~/Documents/UKESM1-0-LL/UKESM1-0-LL-hist-so.mat';
 Sfiletoload2 = '~/Documents/UKESM1-0-LL/UKESM1-0-LL-ssp585-so.mat';
 
@@ -2045,30 +2051,28 @@ TF = nanmean(TF,2);
 TF = squeeze(TF(:,1,:));
 
 % save
-save UKESM1-0-LL_ssp585.mat x y TF TF_basins year
+save UKESM1-0-LL-Robin_ssp585.mat x y TF TF_basins year
 
 % also save historical part of run
-% note define historical as <2006 for consistency with CMIP5 runs
-% in actuality historical extends to 2014 in CMIP6
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
-save UKESM1-0-LL_historical.mat x y TF_historical TF_basins_historical year_historical
+save UKESM1-0-LL-Robin_historical.mat x y TF_historical TF_basins_historical year_historical
 
 end
 
-%% CESM2 ssp585
+%% CESM2-Leo ssp585
 % note processing for CESM2 is a bit different to the others
 % because I had to download the output myself and also because
 % this is a CMIP6 model so the historical period extends to 2014
 if modelid == 18,
 
-% path to CESM2 temperature output
+% path to temperature output
 Tfiletoload1 = '~/Documents/CESM2/CESM2-hist-thetao.mat';
 Tfiletoload2 = '~/Documents/CESM2/CESM2-ssp585-thetao.mat';
 
-% path to CESM2 salinity output
+% path to salinity output
 Sfiletoload1 = '~/Documents/CESM2/CESM2-hist-so.mat';
 Sfiletoload2 = '~/Documents/CESM2/CESM2-ssp585-so.mat';
 
@@ -2168,32 +2172,24 @@ TF = nanmean(TF,2);
 TF = squeeze(TF(:,1,:));
 
 % save
-save CESM2_ssp585.mat x y TF TF_basins year
+save CESM2-Leo_ssp585.mat x y TF TF_basins year
 
 % also save historical part of run
-% note define historical as <2006 for consistency with CMIP5 runs
-% in actuality historical extends to 2014 in CMIP6
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
-save CESM2_historical.mat x y TF_historical TF_basins_historical year_historical
+save CESM2-Leo_historical.mat x y TF_historical TF_basins_historical year_historical
 
 end
 
 %% NorESM2 SSP58.5
-
 if modelid == 19,
 
-% path to NorESM2 SSP585 temperature output
-Tfiletoload = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM/thetao_Oyr_NorESM2-MM_r1i1p1f1_gr_1950-2100_part.nc';
-% path to NorESM2 SSP585 salinity output
-Sfiletoload = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM/so_Oyr_NorESM2-MM_r1i1p1f1_gr_1950-2100_part.nc';
-
-%% path to NorESM2 SSP585 temperature output
-%Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM/thetao_Oyr_NorESM2-MM_r1i1p1f1_gr_1950-2100_part.nc';
-%% path to NorESM2 SSP585 salinity output
-%Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM/so_Oyr_NorESM2-MM_r1i1p1f1_gr_1950-2100_part.nc';
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM-ssp585/thetao_Oyr_NorESM2-MM_r1i1p1f1_gr_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM-ssp585/so_Oyr_NorESM2-MM_r1i1p1f1_gr_1950-2100_part.nc';
 
 % read fields
 lon=ncread(Tfiletoload,'longitude');
@@ -2267,8 +2263,8 @@ load ../final_region_def/ice_ocean_sectors.mat
 % find regular grid points inside ice-ocean basins
 basin = NaN(size(Xreg,1),size(Xreg,2));
 for k=1:7, % since there are 7 basins
-    regions(k).NorESMinds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
-    basin(regions(k).NorESMinds) = k;
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
 end
 
 % get thermal forcing profile per basin per year
@@ -2276,7 +2272,7 @@ TF_basins_z = NaN(7,length(z),length(year));
 TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
 for jj=1:7,
     for kk=1:length(z),
-        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).NorESMinds,kk,:),1);
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
     end
 end
 
@@ -2296,31 +2292,147 @@ TF = squeeze(TF(:,1,:));
 save NorESM2_ssp585.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
-save NorESM_historical.mat x y TF_historical TF_basins_historical year_historical
+save NorESM2_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+%% NorESM2 SSP245
+if modelid == 20,
+
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM-ssp245/thetao_Oyr_NorESM2-MM_ssp245_r1i1p1f1_gr_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/NorESM2-MM-ssp245/so_Oyr_NorESM2-MM_ssp245_r1i1p1f1_gr_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'longitude');
+lat=ncread(Tfiletoload,'latitude');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+lon_vert=ncread(Tfiletoload,'vertices_longitude');
+lat_vert=ncread(Tfiletoload,'vertices_latitude');
+
+% read only TS between 200 and 500 m and one point either side
+depthinds = [max(find(z<200)):min(find(z>500))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of NorESM points on BedMachine grid
+% gridcell vertices
+[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save NorESM2_ssp245.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save NorESM2_historical.mat x y TF_historical TF_basins_historical year_historical
 
 end
 
 %% MPI-ESM1-2-HR SSP58.5
-
-if modelid == 20,
+if modelid == 21,
 
 % path to temperature output
-Tfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-Tfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/thetao_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
+%Tfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+%Tfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/thetao_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
 
-%Tfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-%Tfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/thetao_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
+Tfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+Tfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/thetao_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
 
 % path to salinity output
-Sfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-Sfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/so_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
+%Sfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+%Sfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/so_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
 
-%Sfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-%Sfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/so_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
+Sfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+Sfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp585/so_Oyr_MPI-ESM1-2-HR_ssp585_r1i1p1f1_gn_2015-2100_rec.nc';
 
 % read fields
 lon=ncread(Tfiletoload1,'lon');
@@ -2431,7 +2543,7 @@ TF = squeeze(TF(:,1,:));
 save MPIESM12HR_ssp585.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -2441,22 +2553,21 @@ end
 
 
 %% MPI-ESM1-2-HR SSP24.5
-
-if modelid == 21,
+if modelid == 22,
 
 % path to temperature output
-Tfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-Tfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/thetao_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
+%Tfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+%Tfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/thetao_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
 
-%Tfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-%Tfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/thetao_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
+Tfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+Tfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/thetao_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
 
 % path to salinity output
-Sfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-Sfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/so_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
+%Sfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+%Sfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/so_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
 
-%Sfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-%Sfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/so_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
+Sfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+Sfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp245/so_Oyr_MPI-ESM1-2-HR_ssp245_r1i1p1f1_gn_2015-2100_rec.nc';
 
 % read fields
 lon=ncread(Tfiletoload1,'lon');
@@ -2567,7 +2678,7 @@ TF = squeeze(TF(:,1,:));
 save MPIESM12HR_ssp245.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
@@ -2577,22 +2688,21 @@ end
 
 
 %% MPI-ESM1-2-HR SSP12.5
-
-if modelid == 22,
+if modelid == 23,
 
 % path to temperature output
-Tfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-Tfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/thetao_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
+%Tfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+%Tfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/thetao_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
 
-%Tfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-%Tfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/thetao_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
+Tfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/thetao_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+Tfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/thetao_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
 
 % path to salinity output
-Sfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-Sfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/so_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
+%Sfiletoload1 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+%Sfiletoload2 = '/nird/projects/nird/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/so_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
 
-%Sfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
-%Sfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/so_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
+Sfiletoload1 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/hist/so_Oyr_MPI-ESM1-2-HR_hist-1950_r1i1p1f1_gn_1950-2014.nc';
+Sfiletoload2 = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/MPI-ESM1-2-HR/ssp126/so_Oyr_MPI-ESM1-2-HR_ssp126_r1i1p1f1_gn_2015-2100_rec.nc';
 
 % read fields
 lon=ncread(Tfiletoload1,'lon');
@@ -2703,10 +2813,608 @@ TF = squeeze(TF(:,1,:));
 save MPIESM12HR_ssp126.mat x y TF TF_basins year
 
 % also save historical part of run
-historical_inds = find(year<2006);
+historical_inds = find(year<2014);
 year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
 save MPIESM12HR_historical.mat x y TF_historical TF_basins_historical year_historical
 
 end
+
+
+%% CESM2-CM6 ssp585
+if modelid == 24,
+
+%lev provided in cm!
+scz = 100;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-CM6-ssp585/thetao_Oyr_CESM2_ssp585_r11i1p1f1_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-CM6-ssp585/so_Oyr_CESM2_ssp585_r11i1p1f1_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'lon');
+lat=ncread(Tfiletoload,'lat');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+%lon_vert=ncread(Tfiletoload,'lon_bnds');
+%lat_vert=ncread(Tfiletoload,'lat_bnds');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save CESM2-CM6_ssp585.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save CESM2-CM6_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+
+%% CESM2-CM6 ssp245
+if modelid == 25,
+
+%lev provided in cm!
+scz = 100;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-CM6-ssp245/thetao_Oyr_CESM2_ssp245_r11i1p1f1_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-CM6-ssp245/so_Oyr_CESM2_ssp245_r11i1p1f1_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'lon');
+lat=ncread(Tfiletoload,'lat');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+%lon_vert=ncread(Tfiletoload,'lon_bnds');
+%lat_vert=ncread(Tfiletoload,'lat_bnds');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save CESM2-CM6_ssp245.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save CESM2-CM6_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+
+%% CESM2-CM6 ssp126
+if modelid == 26,
+
+%lev provided in cm!
+scz = 100;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-CM6-ssp126/thetao_Oyr_CESM2_ssp126_r11i1p1f1_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-CM6-ssp126/so_Oyr_CESM2_ssp126_r11i1p1f1_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'lon');
+lat=ncread(Tfiletoload,'lat');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+%lon_vert=ncread(Tfiletoload,'lon_bnds');
+%lat_vert=ncread(Tfiletoload,'lat_bnds');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save CESM2-CM6_ssp126.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save CESM2-CM6_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+%% UKESM1-0-LL-ssp585
+if modelid == 27,
+
+%lev provided in m!
+scz = 1;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/UKESM1-0-LL-ssp585/thetao_Oyr_UKESM1-0-LL_ssp585_r1i1p1f2_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/UKESM1-0-LL-ssp585/so_Oyr_UKESM1-0-LL_ssp585_r1i1p1f2_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'longitude');
+lat=ncread(Tfiletoload,'latitude');
+z=ncread(Tfiletoload,'lev');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save UKESM1-0-LL-CM6_ssp585.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save UKESM1-0-LL-CM6_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+%% UKESM1-0-LL-ssp245
+if modelid == 28,
+
+%lev provided in m!
+scz = 1;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/UKESM1-0-LL-ssp245/thetao_Oyr_UKESM1-0-LL_ssp245_r1i1p1f2_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/UKESM1-0-LL-ssp245/so_Oyr_UKESM1-0-LL_ssp245_r1i1p1f2_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'longitude');
+lat=ncread(Tfiletoload,'latitude');
+z=ncread(Tfiletoload,'lev');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save UKESM1-0-LL-CM6_ssp245.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save UKESM1-0-LL-CM6_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
