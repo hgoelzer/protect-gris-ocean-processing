@@ -8,15 +8,26 @@ i = 0;
 %i = i + 1; inputMatFiles{i} = 'MAR3.9-HadGEM2-ES-rcp85-JJA_mean-tidewaterbasins_rignotid.mat';
 %i = i + 1; inputMatFiles{i} = 'MAR3.9-IPSL-CM5-MR-rcp85-JJA_mean-tidewaterbasins_rignotid.mat';
 
-i = i + 1; inputMatFiles{i} = 'MARv3.12-MPI-ESM1-2-HR-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
-i = i + 1; inputMatFiles{i} = 'MARv3.12-MPI-ESM1-2-HR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
-i = i + 1; inputMatFiles{i} = 'MARv3.12-MPI-ESM1-2-HR-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
 
-i = i + 1; inputMatFiles{i} = 'MARv3.12-ACCESS1.3-rcp85-JJA_mean-tidewaterbasins_rignotid.mat';
-i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
-i = i + 1; inputMatFiles{i} = 'MARv3.12-CNRM-CM6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-ACCESS1.3-rcp85-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-Leo-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-CNRM-CM6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-CNRM-ESM2-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-MPI-ESM1-2-HR-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-MPI-ESM1-2-HR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-MPI-ESM1-2-HR-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-UKESM1-0-LL-Robin-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-NorESM2-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-NorESM2-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-CMIP6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-CMIP6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-CMIP6-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
+i = i + 1; inputMatFiles{i} = 'MARv3.12-UKESM1-0-LL-CMIP6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-UKESM1-0-LL-CMIP6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
 
-
+%i = i + 1; inputMatFiles{i} = 'RACMO2.3p2-CESM2-CM6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'RACMO2.3p2-CESM2-CM6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'RACMO2.3p2-CESM2-CM6-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
 
 
 

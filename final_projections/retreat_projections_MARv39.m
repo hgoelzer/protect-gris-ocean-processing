@@ -11,7 +11,7 @@ sf = 9;
 % zero year
 yr0 = 2014;
 
-plot_flg = 1;
+plot_flg = 0;
 
 %% calculate retreat
 
@@ -47,10 +47,9 @@ N = length(k)/length(glaciers);
 % mm = 8 for CNRM-CM6-1 ssp585
 % mm = 9 for CNRM-CM6-1 ssp126
 % mm = 10 for CNRM-ESM2-1 ssp585
-% mm = 11 for UKESM1-0-LL ssp585
-% mm = 12 for CESM2
-modelscenario = {'MIROC5_RCP2.6','MIROC5_RCP8.5','NorESM_RCP8.5','HadGEM_RCP8.5','CSIRO_RCP8.5','IPSLCM_RCP8.5','ACCESS_RCP8.5'...
-                 'CNRM-CM6-1_ssp585','CNRM-CM6-1_ssp126','CNRM-ESM2-1_ssp585','UKESM1-0-LL_ssp585','CESM2_ssp585'};
+% mm = 11 for UKESM1-0-LL-Robin ssp585
+% mm = 12 for CESM2-Leo
+
 sectorname = {'SE','SW','CE','CW','NE','NW','NO'};
 for mm = 1:12,
 
@@ -126,17 +125,17 @@ for mm = 1:12,
             MA(ii,:) = MA(ii,:) - MA(ii,find(floor(t)==yr0));
         end
     elseif mm == 11,
-        t = glaciers(1).UKESM1.ssp585.tmelt;
+        t = glaciers(1).UKESM1Robin.ssp585.tmelt;
         for ii=1:length(glaciers),
 %             MA(ii,:) = glaciers(ii).MIROC5.RCP85.melt-glaciers(ii).melt.meltbaseline;
-            MA(ii,:) = movmean(glaciers(ii).UKESM1.ssp585.melt,[sb,sf]);
+            MA(ii,:) = movmean(glaciers(ii).UKESM1Robin.ssp585.melt,[sb,sf]);
             MA(ii,:) = MA(ii,:) - MA(ii,find(floor(t)==yr0));
         end
     elseif mm == 12,
-        t = glaciers(1).CESM2.ssp585.tmelt;
+        t = glaciers(1).CESM2Leo.ssp585.tmelt;
         for ii=1:length(glaciers),
 %             MA(ii,:) = glaciers(ii).MIROC5.RCP85.melt-glaciers(ii).melt.meltbaseline;
-            MA(ii,:) = movmean(glaciers(ii).CESM2.ssp585.melt,[sb,sf]);
+            MA(ii,:) = movmean(glaciers(ii).CESM2Leo.ssp585.melt,[sb,sf]);
             MA(ii,:) = MA(ii,:) - MA(ii,find(floor(t)==yr0));
         end
     end
@@ -156,81 +155,115 @@ for mm = 1:12,
     for l=1:8,
         fwm0 = fluxweightedmean(l,:,end);
         fwm0_sorted = sort(fwm0);
+        id05(l) = min(find(fwm0==fwm0_sorted(floor(0.05*length(fwm0_sorted)))));
         id25(l) = min(find(fwm0==fwm0_sorted(floor(0.25*length(fwm0_sorted)))));
         id50(l) = min(find(fwm0==fwm0_sorted(floor(0.50*length(fwm0_sorted)))));
         id75(l) = min(find(fwm0==fwm0_sorted(floor(0.75*length(fwm0_sorted)))));
+        id95(l) = min(find(fwm0==fwm0_sorted(floor(0.95*length(fwm0_sorted)))));
         fw50(l,:) = fluxweightedmean(l,id50(l),:);
         if fw50(l,end)<=0,
+            fw05(l,:) = fluxweightedmean(l,id05(l),:);
             fw25(l,:) = fluxweightedmean(l,id25(l),:);
             fw75(l,:) = fluxweightedmean(l,id75(l),:);
+            fw95(l,:) = fluxweightedmean(l,id95(l),:);
         elseif fw50(l,end)>0,
+            fw95(l,:) = fluxweightedmean(l,id05(l),:);
             fw75(l,:) = fluxweightedmean(l,id25(l),:);
             fw25(l,:) = fluxweightedmean(l,id75(l),:);
+            fw05(l,:) = fluxweightedmean(l,id95(l),:);
         end
     end
 
     % assign to output arrays
+    Rp05(mm,:,:) = fw05';
     Rhigh(mm,:,:) = fw25';
     Rmed(mm,:,:) = fw50';
     Rlow(mm,:,:) = fw75';
+    Rp95(mm,:,:) = fw95';
 
 end
 
 % permute into more logical order
+Rp05 = permute(Rp05,[1,3,2]);
 Rhigh = permute(Rhigh,[1,3,2]);
 Rmed = permute(Rmed,[1,3,2]);
 Rlow = permute(Rlow,[1,3,2]);
+Rp95 = permute(Rp95,[1,3,2]);
 
 % assign to output arrays
 retreat.time = t;
 % MIROC5 RCP2.6
+retreat.MIROC5.RCP26.p95 = squeeze(Rp95(1,:,:));
 retreat.MIROC5.RCP26.low = squeeze(Rlow(1,:,:));
 retreat.MIROC5.RCP26.med = squeeze(Rmed(1,:,:));
 retreat.MIROC5.RCP26.high = squeeze(Rhigh(1,:,:));
+retreat.MIROC5.RCP26.p05 = squeeze(Rp05(1,:,:));
 % MIROC5 RCP8.5
+retreat.MIROC5.RCP85.p95 = squeeze(Rp95(2,:,:));
 retreat.MIROC5.RCP85.low = squeeze(Rlow(2,:,:));
 retreat.MIROC5.RCP85.med = squeeze(Rmed(2,:,:));
 retreat.MIROC5.RCP85.high = squeeze(Rhigh(2,:,:));
+retreat.MIROC5.RCP85.p05 = squeeze(Rp05(2,:,:));
 % NorESM RCP8.5
+retreat.NorESM.RCP85.p95 = squeeze(Rp95(3,:,:));
 retreat.NorESM.RCP85.low = squeeze(Rlow(3,:,:));
 retreat.NorESM.RCP85.med = squeeze(Rmed(3,:,:));
 retreat.NorESM.RCP85.high = squeeze(Rhigh(3,:,:));
+retreat.NorESM.RCP85.p05 = squeeze(Rp05(3,:,:));
 % HadGEM RCP8.5
+retreat.HadGEM.RCP85.p95 = squeeze(Rp95(4,:,:));
 retreat.HadGEM.RCP85.low = squeeze(Rlow(4,:,:));
 retreat.HadGEM.RCP85.med = squeeze(Rmed(4,:,:));
 retreat.HadGEM.RCP85.high = squeeze(Rhigh(4,:,:));
+retreat.HadGEM.RCP85.p05 = squeeze(Rp05(4,:,:));
 % CSIRO RCP8.5
+retreat.CSIRO.RCP85.p95 = squeeze(Rp95(5,:,:));
 retreat.CSIRO.RCP85.low = squeeze(Rlow(5,:,:));
 retreat.CSIRO.RCP85.med = squeeze(Rmed(5,:,:));
 retreat.CSIRO.RCP85.high = squeeze(Rhigh(5,:,:));
+retreat.CSIRO.RCP85.p05 = squeeze(Rp05(5,:,:));
 % IPSLCM RCP8.5
+retreat.IPSLCM.RCP85.p95 = squeeze(Rp95(6,:,:));
 retreat.IPSLCM.RCP85.low = squeeze(Rlow(6,:,:));
 retreat.IPSLCM.RCP85.med = squeeze(Rmed(6,:,:));
 retreat.IPSLCM.RCP85.high = squeeze(Rhigh(6,:,:));
+retreat.IPSLCM.RCP85.p05 = squeeze(Rp05(6,:,:));
 % ACCESS RCP8.5
+retreat.ACCESS.RCP85.p95 = squeeze(Rp95(7,:,:));
 retreat.ACCESS.RCP85.low = squeeze(Rlow(7,:,:));
 retreat.ACCESS.RCP85.med = squeeze(Rmed(7,:,:));
 retreat.ACCESS.RCP85.high = squeeze(Rhigh(7,:,:));
+retreat.ACCESS.RCP85.p05 = squeeze(Rp05(7,:,:));
 % CNRM-CM6-1 ssp585
+retreat.CNRMCM6.ssp585.p95 = squeeze(Rp95(8,:,:));
 retreat.CNRMCM6.ssp585.low = squeeze(Rlow(8,:,:));
 retreat.CNRMCM6.ssp585.med = squeeze(Rmed(8,:,:));
 retreat.CNRMCM6.ssp585.high = squeeze(Rhigh(8,:,:));
+retreat.CNRMCM6.ssp585.p05 = squeeze(Rp05(8,:,:));
 % CNRM-CM6-1 ssp126
+retreat.CNRMCM6.ssp126.p95 = squeeze(Rp95(9,:,:));
 retreat.CNRMCM6.ssp126.low = squeeze(Rlow(9,:,:));
 retreat.CNRMCM6.ssp126.med = squeeze(Rmed(9,:,:));
 retreat.CNRMCM6.ssp126.high = squeeze(Rhigh(9,:,:));
+retreat.CNRMCM6.ssp126.p05 = squeeze(Rp05(9,:,:));
 % CNRM-ESM2-1 ssp585
+retreat.CNRMESM2.ssp585.p95 = squeeze(Rp95(10,:,:));
 retreat.CNRMESM2.ssp585.low = squeeze(Rlow(10,:,:));
 retreat.CNRMESM2.ssp585.med = squeeze(Rmed(10,:,:));
 retreat.CNRMESM2.ssp585.high = squeeze(Rhigh(10,:,:));
+retreat.CNRMESM2.ssp585.p05 = squeeze(Rp05(10,:,:));
 % UKESM1-0-LL ssp585
-retreat.UKESM1.ssp585.low = squeeze(Rlow(11,:,:));
-retreat.UKESM1.ssp585.med = squeeze(Rmed(11,:,:));
-retreat.UKESM1.ssp585.high = squeeze(Rhigh(11,:,:));
+retreat.UKESM1Robin.ssp585.p95 = squeeze(Rp95(11,:,:));
+retreat.UKESM1Robin.ssp585.low = squeeze(Rlow(11,:,:));
+retreat.UKESM1Robin.ssp585.med = squeeze(Rmed(11,:,:));
+retreat.UKESM1Robin.ssp585.high = squeeze(Rhigh(11,:,:));
+retreat.UKESM1Robin.ssp585.p05 = squeeze(Rp05(11,:,:));
 % CESM2 ssp585
-retreat.CESM2.ssp585.low = squeeze(Rlow(12,:,:));
-retreat.CESM2.ssp585.med = squeeze(Rmed(12,:,:));
-retreat.CESM2.ssp585.high = squeeze(Rhigh(12,:,:));
+retreat.CESM2Leo.ssp585.p95 = squeeze(Rp95(12,:,:));
+retreat.CESM2Leo.ssp585.low = squeeze(Rlow(12,:,:));
+retreat.CESM2Leo.ssp585.med = squeeze(Rmed(12,:,:));
+retreat.CESM2Leo.ssp585.high = squeeze(Rhigh(12,:,:));
+retreat.CESM2Leo.ssp585.p05 = squeeze(Rp05(12,:,:));
 
 %% add sector TF for models with ice shelves
 for l=1:7,    
@@ -244,8 +277,8 @@ for l=1:7,
     retreat.CNRMCM6.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).CNRMCM6.ssp585.tTF,glaciers(ids(l).inds(1)).CNRMCM6.ssp585.TF,retreat.time);
     retreat.CNRMCM6.ssp126.TF(l,:) = interp1(glaciers(ids(l).inds(1)).CNRMCM6.ssp126.tTF,glaciers(ids(l).inds(1)).CNRMCM6.ssp126.TF,retreat.time);
     retreat.CNRMESM2.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).CNRMESM2.ssp585.tTF,glaciers(ids(l).inds(1)).CNRMESM2.ssp585.TF,retreat.time);
-    retreat.UKESM1.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).UKESM1.ssp585.tTF,glaciers(ids(l).inds(1)).UKESM1.ssp585.TF,retreat.time);
-    retreat.CESM2.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).CESM2.ssp585.tTF,glaciers(ids(l).inds(1)).CESM2.ssp585.TF,retreat.time);
+    retreat.UKESM1Robin.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).UKESM1Robin.ssp585.tTF,glaciers(ids(l).inds(1)).UKESM1Robin.ssp585.TF,retreat.time);
+    retreat.CESM2Leo.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).CESM2Leo.ssp585.tTF,glaciers(ids(l).inds(1)).CESM2Leo.ssp585.TF,retreat.time);
 end
 
 %% save outputs

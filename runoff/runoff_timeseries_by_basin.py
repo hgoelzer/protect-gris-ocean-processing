@@ -37,8 +37,17 @@ def read_runoff(ncfilename,xVar,yVar,runoffVar,runoffCalculation):
 
    x = ncfile.variables[xVar][:]
    y = ncfile.variables[yVar][:]
-   lat = ncfile.variables['LAT'][:,:]
-   lon = ncfile.variables['LON'][:,:]
+# For MAR without LAT LON in runoff files
+# Read lat/lon from different file
+   latlonfile = Dataset('LAT_LON_MAR1km.nc', 'r') 
+   lat = latlonfile.variables['LAT'][:,:]
+   lon = latlonfile.variables['LON'][:,:]
+# For MAR
+#   lat = ncfile.variables['LAT'][:,:]
+#   lon = ncfile.variables['LON'][:,:]
+# For RACMO
+#   lat = ncfile.variables['lat'][:,:]
+#   lon = ncfile.variables['lon'][:,:]
    runoff = ncfile.variables[runoffVar]
    
    # Extract year
@@ -151,10 +160,12 @@ netcdf_dirs = list()
 #RCMverFile = 'MARv3.9'
 RCMver = 'MARv3.12'
 RCMverFile = 'MARv3.12'
+#RCMver = 'RACMO2.3p2'
+#RCMverFile = 'RACMO2.3p2'
 # ISMIP6 MAR3.9
 #CMIP = 'MIROC5' # 'MIROC5' | 'NorESM1' | 'CSIRO-Mk3.6' | 'HadGEM2-ES' | 'IPSL-CM5-MR' | 'ACCESS1.3' | 'CNRM-CM6' | 'UKESM1-CM6' | 'CNRM-ESM2' | 'CESM2'
 # PROTECT MAR3.12
-CMIP = 'CNRM-CM6' #  'ACCESS1.3' | 'CESM2' | 'CNRM-CM6' | 'CNRM-ESM2' | 'MPI-ESM1-2-HR' | 'UKESM1-0-LL' 
+CMIP = 'UKESM1-0-LL-CMIP6' #  'ACCESS1.3' | 'CESM2-Leo' | 'CNRM-CM6' | 'CNRM-ESM2' | 'MPI-ESM1-2-HR' | 'UKESM1-0-LL-Robin' | 'CESM2-CMIP6' | 'NorESM2' | 'UKESM1-0-LL-CMIP6' 
 rcp  = 'ssp585'  # 'histo' | 'rcp26' | 'rcp85' | 'ssp126' | 'ssp245' | 'ssp585'
 
 approach = 'retreat-rate' # 'retreat-rate' | 'melt-rate'
@@ -196,7 +207,7 @@ if approach == 'melt-rate': ##{{{
 ##}}}
 
 # RCM/RACMO directories
-RCMdir = '/projects/NS8006K/PROTECT/RCM'
+RCMdir = '/projects/NS8085K/PROTECT/RCM'
 RACMOdir = 'RACMO_DIR'
 AUXdir = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/InputData'
 

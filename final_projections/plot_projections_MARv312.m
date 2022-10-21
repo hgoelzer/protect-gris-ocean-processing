@@ -2,6 +2,8 @@
 
 load projected_retreat_MARv312.mat 
 
+t=[1950:2100];
+
 % retreat time series plot
 lspace = 0.06;
 rspace = 0.025;
@@ -59,9 +61,9 @@ for l=1:7,
     plot(t,retreat.CNRMCM6.ssp585.med(l,:),'color',cols(3,:),'linewidth',lwthick);
     plot(t,retreat.CNRMCM6.ssp585.low(l,:),'color',cols(3,:),'linewidth',lwthick); 
     %% CNRM-ESM2-1 ssp585
-    %plot(t,retreat.CNRMESM2.ssp585.high(l,:),'color',cols(4,:),'linewidth',lwthick);
-    %plot(t,retreat.CNRMESM2.ssp585.med(l,:),'color',cols(4,:),'linewidth',lwthick);
-    %plot(t,retreat.CNRMESM2.ssp585.low(l,:),'color',cols(4,:),'linewidth',lwthick); 
+    plot(t,retreat.CNRMESM2.ssp585.high(l,:),'color',cols(4,:),'linewidth',lwthick);
+    plot(t,retreat.CNRMESM2.ssp585.med(l,:),'color',cols(4,:),'linewidth',lwthick);
+    plot(t,retreat.CNRMESM2.ssp585.low(l,:),'color',cols(4,:),'linewidth',lwthick); 
     % MPIESM12HR ssp585
     plot(t,retreat.MPIESM12HR.ssp585.high(l,:),'color',cols(5,:),'linewidth',lwthick);
     plot(t,retreat.MPIESM12HR.ssp585.med(l,:),'color',cols(5,:),'linewidth',lwthick);
@@ -75,9 +77,9 @@ for l=1:7,
     plot(t,retreat.MPIESM12HR.ssp126.med(l,:),'color',cols(7,:),'linewidth',lwthick);
     plot(t,retreat.MPIESM12HR.ssp126.low(l,:),'color',cols(7,:),'linewidth',lwthick); 
     %% UKESM1-0-LL ssp585
-    %plot(t,retreat.UKESM1.ssp585.high(l,:),'color',cols(8,:),'linewidth',lwthick);
-    %plot(t,retreat.UKESM1.ssp585.med(l,:),'color',cols(8,:),'linewidth',lwthick);
-    %plot(t,retreat.UKESM1.ssp585.low(l,:),'color',cols(8,:),'linewidth',lwthick); 
+    plot(t,retreat.UKESM1.ssp585.high(l,:),'color',cols(8,:),'linewidth',lwthick);
+    plot(t,retreat.UKESM1.ssp585.med(l,:),'color',cols(8,:),'linewidth',lwthick);
+    plot(t,retreat.UKESM1.ssp585.low(l,:),'color',cols(8,:),'linewidth',lwthick); 
 
     xlim([2015 2100]); ylim([-45 5]);
     set(gca,'fontsize',fs,'box','on');
@@ -107,11 +109,11 @@ fs0 = 4;
 annotation('textbox','position',[tx,ty+1*dy,0,0],'string','ACCESS-RCP8.5','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(1,:));
 annotation('textbox','position',[tx,ty+2*dy,0,0],'string','CESM2-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(2,:));
 annotation('textbox','position',[tx,ty+3*dy,0,0],'string','CNRM-CM6-1-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(3,:));
-%annotation('textbox','position',[tx,ty+4*dy,0,0],'string','CNRM-ESM2-1-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(4,:));
+annotation('textbox','position',[tx,ty+4*dy,0,0],'string','CNRM-ESM2-1-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(4,:));
 annotation('textbox','position',[tx,ty+5*dy,0,0],'string','MPIESM12HR-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(5,:));
 annotation('textbox','position',[tx,ty+6*dy,0,0],'string','MPIESM12HR-ssp245','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(6,:));
 annotation('textbox','position',[tx,ty+7*dy,0,0],'string','MPIESM12HR-ssp126','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(7,:));
-%annotation('textbox','position',[tx,ty+8*dy,0,0],'string','UKESM1-0-LL-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(8,:));
+annotation('textbox','position',[tx,ty+8*dy,0,0],'string','UKESM1-0-LL-ssp585','fontsize',fs0,'interpreter','latex','edgecolor','none','color',cols(8,:));
 
 saveplot(17,8,300,'retreat_projections_MARv312.png');
 close all;
@@ -132,11 +134,11 @@ for l=1:7,
     plot(t,retreat.ACCESS.RCP85.TF(l,:),'color',cols(1,:),'linewidth',lwthick);
     plot(t,retreat.CESM2.ssp585.TF(l,:),'color',cols(2,:),'linewidth',lwthick);
     plot(t,retreat.CNRMCM6.ssp585.TF(l,:),'color',cols(3,:),'linewidth',lwthick);
-    %plot(t,retreat.CNRMESM2.ssp585.TF(l,:),'color',cols(4,:),'linewidth',lwthick);
+    plot(t,retreat.CNRMESM2.ssp585.TF(l,:),'color',cols(4,:),'linewidth',lwthick);
     plot(t,retreat.MPIESM12HR.ssp585.TF(l,:),'color',cols(5,:),'linewidth',lwthick);
     plot(t,retreat.MPIESM12HR.ssp245.TF(l,:),'color',cols(6,:),'linewidth',lwthick);
     plot(t,retreat.MPIESM12HR.ssp126.TF(l,:),'color',cols(7,:),'linewidth',lwthick);
-    %plot(t,retreat.UKESM1.ssp585.TF(l,:),'color',cols(8,:),'linewidth',lwthick);
+    plot(t,retreat.UKESM1.ssp585.TF(l,:),'color',cols(8,:),'linewidth',lwthick);
 
     xlim([2015 2100]); ylim([1 11]);
     set(gca,'fontsize',fs,'box','on');
@@ -166,11 +168,11 @@ fs = 5;
 annotation('textbox','position',[tx,ty-1*dy,0,0],'string','ACCESS-RCP8.5','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(1,:));
 annotation('textbox','position',[tx,ty-2*dy,0,0],'string','CESM2-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(2,:));
 annotation('textbox','position',[tx,ty-3*dy,0,0],'string','CNRM-CM6-1-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(3,:));
-%annotation('textbox','position',[tx,ty-4*dy,0,0],'string','CNRM-ESM2-1-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(4,:));
+annotation('textbox','position',[tx,ty-4*dy,0,0],'string','CNRM-ESM2-1-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(4,:));
 annotation('textbox','position',[tx,ty-5*dy,0,0],'string','MPIESM12HR-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(5,:));
 annotation('textbox','position',[tx,ty-6*dy,0,0],'string','MPIESM12HR-ssp245','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(6,:));
 annotation('textbox','position',[tx,ty-7*dy,0,0],'string','MPIESM12HR-ssp126','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(7,:));
-%annotation('textbox','position',[tx,ty-8*dy,0,0],'string','UKESM1-0-LL-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(8,:));
+annotation('textbox','position',[tx,ty-8*dy,0,0],'string','UKESM1-0-LL-ssp585','fontsize',fs,'interpreter','latex','edgecolor','none','color',cols(8,:));
 
 saveplot(17,8,300,'TF_projections_MARv312.png');
 close all;
