@@ -8,6 +8,9 @@ This python script reads MAR model output netcdfs, accumulates runoff per draina
 ### runoff\_add\_glacier\_names.m
 This matlab script reads the mat file output from runoff\_timeseries\_by\_basin.py and restructures the data with IDs and glacier names from Rignot and Mouginot (2012).
 
+### combine\_ext.m
+Combine files when processing runs into memory problems 
+
 ### Supporting scripts and files
 **basins4highres\_xy.mat\_submergedarea.tif**: Raster containing the submerged frontal area of each terminus face. Necessary for converting units in runoff\_timeseries\_by\_basin.py
 
