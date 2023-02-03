@@ -158,20 +158,15 @@ netcdf_dirs = list()
 # Select the climate model
 #RCMver = 'MAR3.9'
 #RCMverFile = 'MARv3.9'
-#RCMver = 'MARv3.12'
-#RCMverFile = 'MARv3.12'
+RCMver = 'MARv3.12'
+RCMverFile = 'MARv3.12'
 #RCMver = 'RACMO2.3p2'
 #RCMverFile = 'RACMO2.3p2'
-RCMver = 'MEC1'
-RCMverFile = 'MEC1'
 # ISMIP6 MAR3.9
 #CMIP = 'MIROC5' # 'MIROC5' | 'NorESM1' | 'CSIRO-Mk3.6' | 'HadGEM2-ES' | 'IPSL-CM5-MR' | 'ACCESS1.3' | 'CNRM-CM6' | 'UKESM1-CM6' | 'CNRM-ESM2' | 'CESM2'
 # PROTECT MAR3.12
-#CMIP = 'UKESM1-0-LL-CMIP6' #  'ACCESS1.3' | 'CESM2-Leo' | 'CNRM-CM6' | 'CNRM-ESM2' | 'MPI-ESM1-2-HR' | 'UKESM1-0-LL-Robin' | 'CESM2-CMIP6' | 'NorESM2' | 'UKESM1-0-LL-CMIP6' 
-#rcp  = 'ssp585'  # 'histo' | 'rcp26' | 'rcp85' | 'ssp126' | 'ssp245' | 'ssp585'
-# impose
-CMIP = 'NorESM2LM'
-rcp = 'B2500ext' # 'ctrl' | 'B1500r02' | 'B2500'
+CMIP = 'UKESM1-0-LL-CMIP6' #  'ACCESS1.3' | 'CESM2-Leo' | 'CNRM-CM6' | 'CNRM-ESM2' | 'MPI-ESM1-2-HR' | 'UKESM1-0-LL-Robin' | 'CESM2-CMIP6' | 'NorESM2' | 'UKESM1-0-LL-CMIP6' 
+rcp  = 'ssp585'  # 'histo' | 'rcp26' | 'rcp85' | 'ssp126' | 'ssp245' | 'ssp585'
 
 approach = 'retreat-rate' # 'retreat-rate' | 'melt-rate'
 
@@ -181,8 +176,8 @@ if 'ssp' in rcp: ##{{{
    histo_end  = '2014'
    proj_start = '2015'
 else:
-   histo_end  = '1849'
-   proj_start = '1850'
+   histo_end  = '2005'
+   proj_start = '2006'
 ## }}}
 
 # Selections for ISMIP6 retreat-rate (low-resolution) processing
@@ -212,7 +207,7 @@ if approach == 'melt-rate': ##{{{
 ##}}}
 
 # RCM/RACMO directories
-RCMdir = '/projects/NS9708K/heig/RCM'
+RCMdir = '/projects/NS8085K/PROTECT/RCM'
 RACMOdir = 'RACMO_DIR'
 AUXdir = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/InputData'
 
@@ -224,6 +219,7 @@ outputDirectory = '.'
 if rcp == 'histo':
    netcdf_dirs.append(RCMdir + '/' + RCMver + '/' + CMIP + '-' + rcp)
 else:
+   netcdf_dirs.append(RCMdir + '/' + RCMver + '/' + CMIP + '-histo')
    netcdf_dirs.append(RCMdir + '/' + RCMver + '/' + CMIP + '-' + rcp)
 #netcdf_filename_template = RCMver.replace('MAR','MARv') + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
 netcdf_filename_template = RCMverFile + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
@@ -238,8 +234,8 @@ xOverride = None
 yOverride = None
 projection = None # use native projection
 
-timeUnits = 'days since 1800-1-1 00:00:00'
-timeEpoch = datetime.strptime('1/1/1800', '%m/%d/%Y')
+timeUnits = 'days since 1900-1-1 00:00:00'
+timeEpoch = datetime.strptime('1/1/1900', '%m/%d/%Y')
 runoffLongName = 'cumulative basin runoff'
 
 # Bias-correction for present-day runoff
