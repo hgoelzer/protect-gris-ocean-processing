@@ -22,14 +22,26 @@ i = 0;
 %i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-CMIP6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
 %i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-CMIP6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
 %i = i + 1; inputMatFiles{i} = 'MARv3.12-CESM2-CMIP6-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
-i = i + 1; inputMatFiles{i} = 'MARv3.12-UKESM1-0-LL-CMIP6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.12-UKESM1-0-LL-CMIP6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
 %i = i + 1; inputMatFiles{i} = 'MARv3.12-UKESM1-0-LL-CMIP6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
 
 %i = i + 1; inputMatFiles{i} = 'RACMO2.3p2-CESM2-CM6-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
 %i = i + 1; inputMatFiles{i} = 'RACMO2.3p2-CESM2-CM6-ssp245-JJA_mean-tidewaterbasins_rignotid.mat';
 %i = i + 1; inputMatFiles{i} = 'RACMO2.3p2-CESM2-CM6-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
 
+%i = i + 1; inputMatFiles{i} = 'SDBN1-CESM2-WACCM-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'SDBN1-CESM2-WACCM-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
 
+%i = i + 1; inputMatFiles{i} = 'MARv3.13-e04-LWC7_2-IPSL-CM6A-LR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.13-e54-LWC7_2-IPSL-CM6A-LR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+
+%i = i + 1; inputMatFiles{i} = 'MARv3.13-e05-IPSL-CM6A-LR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.13-e55-IPSL-CM6A-LR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%i = i + 1; inputMatFiles{i} = 'MARv3.13-e63-IPSL-CM6A-LR-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+%
+i = i + 1; inputMatFiles{i} = 'HIRHAM5-EC-EARTH-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
+i = i + 1; inputMatFiles{i} = 'HIRHAM5-EC-EARTH-ssp126-JJA_mean-tidewaterbasins_rignotid.mat';
+i = i + 1; inputMatFiles{i} = 'HIRHAM5-CESM2-ssp585-JJA_mean-tidewaterbasins_rignotid.mat';
 
 for iFile = 1:numel(inputMatFiles)
    inputMatFile = inputMatFiles{iFile};

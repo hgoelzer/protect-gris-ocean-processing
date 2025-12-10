@@ -1,6 +1,11 @@
 # runoff
 Scripts and output for processing of MAR runoff into basin-cumulative subglacial discharge time series and rasters.
 
+# Need python environment here
+conda create -n ismip_ocean_gris python=3.8 numpy scipy xarray netCDF4 gdal progress
+conda activate ismip_ocean_gris 
+
+
 ## scripts
 ### runoff\_timeseries\_by\_basin.py
 This python script reads MAR model output netcdfs, accumulates runoff per drainage basin at each time step, and outputs either a mat file with the time series of discharge or a netcdf with a time series of ice-sheet-wide rasters with pixel values representing discharge. The type of output can be toggled within the options in the script.

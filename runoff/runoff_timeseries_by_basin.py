@@ -37,17 +37,21 @@ def read_runoff(ncfilename,xVar,yVar,runoffVar,runoffCalculation):
 
    x = ncfile.variables[xVar][:]
    y = ncfile.variables[yVar][:]
-# For MAR without LAT LON in runoff files
-# Read lat/lon from different file
-   latlonfile = Dataset('LAT_LON_MAR1km.nc', 'r') 
-   lat = latlonfile.variables['LAT'][:,:]
-   lon = latlonfile.variables['LON'][:,:]
-# For MAR
-#   lat = ncfile.variables['LAT'][:,:]
-#   lon = ncfile.variables['LON'][:,:]
-# For RACMO
-#   lat = ncfile.variables['lat'][:,:]
-#   lon = ncfile.variables['lon'][:,:]
+   # For MAR without LAT LON in runoff files
+   # Read lat/lon from different file
+   #latlonfile = Dataset('LAT_LON_MAR1km.nc', 'r') 
+   #lat = latlonfile.variables['LAT'][:,:]
+   #lon = latlonfile.variables['LON'][:,:]
+   # For MAR
+   lat = ncfile.variables['LAT'][:,:]
+   lon = ncfile.variables['LON'][:,:]
+   # For RACMO
+   #lat = ncfile.variables['lat'][:,:]
+   #lon = ncfile.variables['lon'][:,:]
+   # For SDBN1
+   #lat = ncfile.variables['lat'][:,:]
+   #lon = ncfile.variables['lon'][:,:]
+
    runoff = ncfile.variables[runoffVar]
    
    # Extract year
@@ -139,7 +143,8 @@ def readRasterBandAsArray(filename, bandnum, rasterBandNoDataValue=None, clip_ex
 #{{{
    raster = gdal.Open(filename, gdalconst.GA_ReadOnly)
    rasterBand = raster.GetRasterBand(bandnum)
-   rasterBandArray = rasterBand.ReadAsArray(0, 0, raster.RasterXSize, raster.RasterYSize).astype(np.float)
+#   rasterBandArray = rasterBand.ReadAsArray(0, 0, raster.RasterXSize, raster.RasterYSize).astype(np.float)
+   rasterBandArray = rasterBand.ReadAsArray(0, 0, raster.RasterXSize, raster.RasterYSize).astype(float)
 
    if rasterBandNoDataValue is None:
       rasterBandNoDataValue = rasterBand.GetNoDataValue()
@@ -158,15 +163,35 @@ netcdf_dirs = list()
 # Select the climate model
 #RCMver = 'MAR3.9'
 #RCMverFile = 'MARv3.9'
-RCMver = 'MARv3.12'
-RCMverFile = 'MARv3.12'
+#RCMver = 'MARv3.12'
+#RCMverFile = 'MARv3.12'
 #RCMver = 'RACMO2.3p2'
 #RCMverFile = 'RACMO2.3p2'
+#RCMver = 'SDBN1'
+#RCMverFile = 'SDBN1'
+RCMver = 'HIRHAM5'
+RCMverFile = 'HIRHAM5'
+#RCMver = 'MARv3.13-e04-LWC7_2'
+#RCMver = 'MARv3.13-e54-LWC7_2'
+#RCMver = 'MARv3.13-e05'
+#RCMver = 'MARv3.13-e55'
+#RCMver = 'MARv3.13-e63'
+#RCMverFile = 'MARv3.13'
+#RCMsubtype = 'e04'
+#RCMsubtype = 'e54'
+#RCMsubtype = 'e05'
+#RCMsubtype = 'e55'
+#RCMsubtype = 'e63'
 # ISMIP6 MAR3.9
 #CMIP = 'MIROC5' # 'MIROC5' | 'NorESM1' | 'CSIRO-Mk3.6' | 'HadGEM2-ES' | 'IPSL-CM5-MR' | 'ACCESS1.3' | 'CNRM-CM6' | 'UKESM1-CM6' | 'CNRM-ESM2' | 'CESM2'
 # PROTECT MAR3.12
-CMIP = 'UKESM1-0-LL-CMIP6' #  'ACCESS1.3' | 'CESM2-Leo' | 'CNRM-CM6' | 'CNRM-ESM2' | 'MPI-ESM1-2-HR' | 'UKESM1-0-LL-Robin' | 'CESM2-CMIP6' | 'NorESM2' | 'UKESM1-0-LL-CMIP6' 
-rcp  = 'ssp585'  # 'histo' | 'rcp26' | 'rcp85' | 'ssp126' | 'ssp245' | 'ssp585'
+#CMIP = 'CESM2-WACCM' #  'ACCESS1.3' | 'CESM2-Leo' | 'CNRM-CM6' | 'CNRM-ESM2' | 'MPI-ESM1-2-HR' | 'UKESM1-0-LL-Robin' | 'CESM2-CMIP6' | 'NorESM2' | 'UKESM1-0-LL-CMIP6' | 'CESM-WACCM' | 'IPSL-CM6A-LR' | 'CESM2'
+# PROTECT MAR3.13
+#CMIP = 'IPSL-CM6A-LR' #
+#rcp  = 'ssp585'  # 'histo' | 'rcp26' | 'rcp85' | 'ssp126' | 'ssp245' | 'ssp585'
+# PROTECT HIRHAM
+CMIP = 'EC-EARTH' # 'EC-EARTH' | 'CESM2'  
+rcp  = 'ssp126'  # 'ssp126' | 'ssp585'
 
 approach = 'retreat-rate' # 'retreat-rate' | 'melt-rate'
 
@@ -191,6 +216,7 @@ if approach == 'retreat-rate': ##{{{
    basin_extrap_buffer_npixels = 0
    outputMatFile = True
    outputNetCDF  = False
+   #outputNetCDF  = True
 ##}}}
 
 # Selections for ISMIP6 melt-rate (high-resolution) processing
@@ -207,9 +233,12 @@ if approach == 'melt-rate': ##{{{
 ##}}}
 
 # RCM/RACMO directories
-RCMdir = '/projects/NS8085K/PROTECT/RCM'
+#RCMdir = '/nird/datalake/NS8085K/PROTECT-GrIS/RCM'
+#RCMdir = '/projects/NS8006K/users/heig/PROTECT/RCM'
+RCMdir = '/nird/projects/NS8085K/PROTECT-GrIS/RCM'
 RACMOdir = 'RACMO_DIR'
-AUXdir = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/InputData'
+#AUXdir = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/InputData'
+AUXdir = '/nird/projects/NS8085K/PROTECT-GrIS/InputData'
 
 # Output directory
 outputDirectory = '.'
@@ -221,8 +250,14 @@ if rcp == 'histo':
 else:
    netcdf_dirs.append(RCMdir + '/' + RCMver + '/' + CMIP + '-histo')
    netcdf_dirs.append(RCMdir + '/' + RCMver + '/' + CMIP + '-' + rcp)
-#netcdf_filename_template = RCMver.replace('MAR','MARv') + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
-netcdf_filename_template = RCMverFile + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
+   # for MARv3.13 at /projects/NS8006K/users/heig/PROTECT/RCM
+   #netcdf_dirs.append(RCMdir + '/' + RCMver + '/' + 'monthly')
+   # MARv3.13-variants
+   #netcdf_filename_template = RCMverFile + '-' + monthly_or_yearly + '-' + RCMsubtype + '-' + CMIP + '-*.nc'
+   #netcdf_filename_template = RCMver.replace('MAR','MARv') + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
+   #netcdf_filename_template = RCMverFile + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
+   # HIRHAM
+   netcdf_filename_template = 'RU_' + RCMverFile + '-' + monthly_or_yearly + '-' + CMIP + '-*.nc'
 
 runoffVar = 'RU'
 runoffUnitConversion = runoff_unit_conversion(inputUnits, outputUnits)
@@ -419,7 +454,10 @@ elif clipfile.split('.')[-1] == 'tif': #{{{
    
    if '*' in basinfilter:
       basinValues = ['{:.0f}'.format(b) for b in sorted(set(basinArray[~np.isnan(basinArray)]))]
-      basinValues.remove('0')
+      # debug
+      print(basinValues)
+      print('commented removal of 0 basin ')
+      #basinValues.remove('0')
    else:
       basinValues = [basinfilter.split('=')[1]]
 

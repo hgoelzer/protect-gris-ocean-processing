@@ -52,10 +52,11 @@ N = length(k)/length(glaciers);
 % mm = 13 for CESM2-CMIP6 - ssp126
 % mm = 14 for UKESM1-0-LL-CMIP6 - ssp585
 % mm = 15 for UKESM1-0-LL-CMIP6 - ssp245
+% mm = 16 for IPSL-CM6A-LR - ssp585
 
 sectorname = {'SE','SW','CE','CW','NE','NW','NO'};
 %for mm = [1, 2, 3, 4, 5, 6, 7, 8]
-for mm = [1:15]
+for mm = [1:16]
 
     % make array of projected sample retreat
     if mm == 1,
@@ -151,8 +152,14 @@ for mm = [1:15]
             MA(ii,:) = movmean(glaciers(ii).UKESM1CMIP6.ssp245.melt,[sb,sf]);
             MA(ii,:) = MA(ii,:) - MA(ii,find(floor(t)==yr0));
         end
+    elseif mm == 16,
+        t = glaciers(1).IPSLCM6ALR.ssp585.tmelt;
+        for ii=1:length(glaciers),
+            MA(ii,:) = movmean(glaciers(ii).IPSLCM6ALR.ssp585.melt,[sb,sf]);
+            MA(ii,:) = MA(ii,:) - MA(ii,find(floor(t)==yr0));
+        end
     end
-    
+
     MA_N = repmat(MA,N,1);
     sampleretreat = k.*MA_N;
 
@@ -295,6 +302,15 @@ retreat.UKESM1CMIP6.ssp245.low = squeeze(Rlow(15,:,:));
 retreat.UKESM1CMIP6.ssp245.med = squeeze(Rmed(15,:,:));
 retreat.UKESM1CMIP6.ssp245.high = squeeze(Rhigh(15,:,:));
 retreat.UKESM1CMIP6.ssp245.p05 = squeeze(Rp05(15,:,:));
+% IPSL-CM6A-LR - ssp585
+retreat.IPSLCM6ALR.ssp585.p95 = squeeze(Rp95(16,:,:));
+retreat.IPSLCM6ALR.ssp585.low = squeeze(Rlow(16,:,:));
+retreat.IPSLCM6ALR.ssp585.med = squeeze(Rmed(16,:,:));
+retreat.IPSLCM6ALR.ssp585.high = squeeze(Rhigh(16,:,:));
+retreat.IPSLCM6ALR.ssp585.p05 = squeeze(Rp05(16,:,:));
+
+fprintf(mat2str(size(retreat.IPSLCM6ALR.ssp585.med)))
+
 
 %% add sector TF for models with ice shelves
 for l=1:7,    
@@ -318,6 +334,8 @@ for l=1:7,
     
     retreat.UKESM1CMIP6.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).UKESM1CMIP6.ssp585.tTF,glaciers(ids(l).inds(1)).UKESM1CMIP6.ssp585.TF,retreat.time);
     retreat.UKESM1CMIP6.ssp245.TF(l,:) = interp1(glaciers(ids(l).inds(1)).UKESM1CMIP6.ssp245.tTF,glaciers(ids(l).inds(1)).UKESM1CMIP6.ssp245.TF,retreat.time);
+
+    retreat.IPSLCM6ALR.ssp585.TF(l,:) = interp1(glaciers(ids(l).inds(1)).IPSLCM6ALR.ssp585.tTF,glaciers(ids(l).inds(1)).IPSLCM6ALR.ssp585.TF,retreat.time);
 end
 
 %% save outputs

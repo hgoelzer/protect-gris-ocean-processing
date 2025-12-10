@@ -32,8 +32,16 @@ clearvars -except modelid
 % modelid = 26 for CESM2-CM6 ssp126
 % modelid = 27 for UKESM1-0-LL-CMIP6 ssp585
 % modelid = 28 for UKESM1-0-LL-CMIP6 ssp245
- 
-%modelid = 24;
+
+% modelid = 29 for CESM2-WACCM ssp585
+% modelid = 30 for CESM2-WACCM ssp126
+
+% modelid = 31 for IPSL-CM6A-LR ssp585 300 years
+
+% modelid = 32 for EC-Earth3 ssp585 
+% modelid = 33 for EC-Earth3 ssp126 
+
+modelid = 33;
 
 % freezing point parameters
 l1 = -5.73e-2;
@@ -3415,6 +3423,603 @@ year_historical = year(historical_inds);
 TF_historical = TF(:,historical_inds);
 TF_basins_historical = TF_basins(:,historical_inds);
 save UKESM1-0-LL-CM6_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+%% CESM2-WACCM ssp585
+if modelid == 29,
+
+%lev provided in cm!
+scz = 100;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-WACCM-ssp585/thetao_Oyr_CESM2-WACCM_ssp585_r1i1p1f1_gn_1950-2299_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-WACCM-ssp585/so_Oyr_CESM2-WACCM_ssp585_r1i1p1f1_gn_1950-2299_part.nc';
+
+
+% read fields
+lon=ncread(Tfiletoload,'lon');
+lat=ncread(Tfiletoload,'lat');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+%lon_vert=ncread(Tfiletoload,'lon_bnds');
+%lat_vert=ncread(Tfiletoload,'lat_bnds');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% Duplicate last year
+T=cat(4,T,T(:,:,:,size(T,4)));
+S=cat(4,S,S(:,:,:,size(S,4)));
+
+% time field is a bit wierd - make own array
+year=[1950:2300];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save CESM2-WACCM_ssp585.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save CESM2-WACCM_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+
+%% CESM2-WACCM ssp126
+if modelid == 30,
+
+%lev provided in cm!
+scz = 100;
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-WACCM-ssp126/thetao_Oyr_CESM2-WACCM_ssp126_r1i1p1f1_gn_1950-2299_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/CESM2-WACCM-ssp126/so_Oyr_CESM2-WACCM_ssp126_r1i1p1f1_gn_1950-2299_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'lon');
+lat=ncread(Tfiletoload,'lat');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+%lon_vert=ncread(Tfiletoload,'lon_bnds');
+%lat_vert=ncread(Tfiletoload,'lat_bnds');
+
+% read only TS between 200 and 500 m and one point either side;
+% lev provided in cm!
+depthinds = [max(find(z<(200*scz))):min(find(z>(500*scz)))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% Duplicate last year
+T=cat(4,T,T(:,:,:,size(T,4)));
+S=cat(4,S,S(:,:,:,size(S,4)));
+
+% time field is a bit wierd - make own array
+year=[1950:2300];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+%[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg*scz,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save CESM2-WACCM_ssp126.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save CESM2-WACCM_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+%% IPSL-CM6A-LR ssp585 200 years
+if modelid == 31,
+
+% path to  temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/IPSL-CM6A-LR-ssp585/thetao_Oyr_IPSL-CM6A-LR-ssp585_r1i1p1f1_gn_1950-2300_rec_cut.nc';
+% path to  salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/IPSL-CM6A-LR-ssp585/so_Oyr_IPSL-CM6A-LR-ssp585_r1i1p1f1_gn_1950-2300_rec_cut.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'nav_lon');
+lat=ncread(Tfiletoload,'nav_lat');
+z=ncread(Tfiletoload,'olevel');
+%time=ncread(Tfiletoload,'time');
+
+% read only TS between 200 and 500 m and one point either side
+depthinds = [max(find(z<200)):min(find(z>500))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+
+% time field is a bit wierd - make own array
+year=[1950:2300];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% there are some weird duplicates - remove these
+[~,lon_inds] = unique(lon);
+[~,lat_inds] = unique(lat);
+lon_dups = setdiff(1:length(lon),lon_inds);
+lat_dups = setdiff(1:length(lat),lat_inds);
+dups_inds = intersect(lon_dups,lat_dups);
+T(dups_inds,:,:) = [];
+S(dups_inds,:,:) = [];
+lon(dups_inds) = [];
+lat(dups_inds) = [];
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin
+% NaNs are already NaNs
+% T(find(T==0)) = NaN;
+% change to celsius
+T = T-273.15;
+% salinity NaNs are already NaNs
+% S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = double(permute(repmat(z,1,size(S,1),length(year)),[2,1,3]));
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of IPSL-CM6A points on BedMachine grid
+% gridcell vertices
+% [x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).IPSLCMinds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).IPSLCMinds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).IPSLCMinds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save IPSL-CM6A-LR_ssp585_2300.mat x y TF TF_basins year
+end
+
+
+%% EC-Earth3 ssp585
+if modelid == 32,
+
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/EC-Earth3-ssp585/thetao_Oyr_EC-Earth3_ssp585_r15i1p1f1_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/EC-Earth3-ssp585/so_Oyr_EC-Earth3_ssp585_r15i1p1f1_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'longitude');
+lat=ncread(Tfiletoload,'latitude');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+lon_vert=ncread(Tfiletoload,'vertices_longitude');
+lat_vert=ncread(Tfiletoload,'vertices_latitude');
+
+% read only TS between 200 and 500 m and one point either side
+depthinds = [max(find(z<200)):min(find(z>500))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save ECEarth3_ssp585.mat x y TF TF_basins year
+
+% also save historical part of run
+historical_inds = find(year<2014);
+year_historical = year(historical_inds);
+TF_historical = TF(:,historical_inds);
+TF_basins_historical = TF_basins(:,historical_inds);
+save ECEarth3_historical.mat x y TF_historical TF_basins_historical year_historical
+
+end
+
+%% EC-Earth3 ssp126
+if modelid == 33,
+
+% path to temperature output
+Tfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/EC-Earth3-ssp126/thetao_Oyr_EC-Earth3_ssp126_r15i1p1f1_gn_1950-2100_part.nc';
+% path to salinity output
+Sfiletoload = '/projects/NS5011K/ISMIP/ISMIP6/GrIS/Forcing/Ocean/CMIP/EC-Earth3-ssp126/so_Oyr_EC-Earth3_ssp126_r15i1p1f1_gn_1950-2100_part.nc';
+
+% read fields
+lon=ncread(Tfiletoload,'longitude');
+lat=ncread(Tfiletoload,'latitude');
+z=ncread(Tfiletoload,'lev');
+%time=ncread(Tfiletoload,'time');
+lon_vert=ncread(Tfiletoload,'vertices_longitude');
+lat_vert=ncread(Tfiletoload,'vertices_latitude');
+
+% read only TS between 200 and 500 m and one point either side
+depthinds = [max(find(z<200)):min(find(z>500))];
+z = z(depthinds);
+T=ncread(Tfiletoload,'thetao',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+S=ncread(Sfiletoload,'so',[1,1,depthinds(1),1],[Inf,Inf,length(depthinds),Inf]);
+
+% time field is a bit wierd - make own array
+year=[1950:2100];
+
+% reshape
+T = reshape(T,size(T,1)*size(T,2),size(T,3),size(T,4));
+S = reshape(S,size(S,1)*size(S,2),size(S,3),size(S,4));
+lon = lon(:);
+lat = lat(:);
+
+% trim to area of interest
+% spatial trim
+inds1 = find(lon>270 & lat>55);
+inds2 = find(lon<10 & lat>55);
+spatialinds = [inds1;inds2];
+T = squeeze(T(spatialinds,:,:));
+S = squeeze(S(spatialinds,:,:));
+lon = lon(spatialinds);
+lat = lat(spatialinds);
+
+% check all variables are double
+T = double(T);
+S = double(S);
+lon = double(lon);
+lat = double(lat);
+
+% temperature is in kelvin with NaNs set to 0
+% change 0s to NaNs
+T(find(T==0)) = NaN;
+% already in celsius
+%T = T-273.15;
+% salinity has NaNs set to 0 so change these
+S(find(S==0)) = NaN;
+
+% calculate thermal forcing
+depth = permute(repmat(z,1,size(S,1),length(year)),[2,1,3]);
+TF = T - (l1*S+l2+l3*depth);
+
+% get coords of points on BedMachine grid
+% gridcell vertices
+[x_vert,y_vert] = latlon2utm(lat_vert,lon_vert);
+% gridcell centres
+[x,y] = latlon2utm(lat,lon);
+
+% interpolate TF onto regular grid
+for jj=1:size(TF,2),
+    for kk=1:size(TF,3),
+        TF0 = squeeze(TF(:,jj,kk));
+        f = scatteredInterpolant(x,y,TF0,'linear','none');
+        TFreg(:,:,jj,kk) = f(Xreg,Yreg);
+    end
+end
+
+% load ice-ocean basin definitions
+load ../final_region_def/ice_ocean_sectors.mat
+
+% find regular grid points inside ice-ocean basins
+basin = NaN(size(Xreg,1),size(Xreg,2));
+for k=1:7, % since there are 7 basins
+    regions(k).inds = find(inpolygon(Xreg,Yreg,regions(k).ocean.x,regions(k).ocean.y));
+    basin(regions(k).inds) = k;
+end
+
+% get thermal forcing profile per basin per year
+TF_basins_z = NaN(7,length(z),length(year));
+TFreg_vec = reshape(TFreg,size(TFreg,1)*size(TFreg,2),size(TFreg,3),size(TFreg,4));
+for jj=1:7,
+    for kk=1:length(z),
+        TF_basins_z(jj,kk,:) = nanmean(TFreg_vec(regions(jj).inds,kk,:),1);
+    end
+end
+
+% take mean of thermal forcing over 200-500 m
+% first interpolate onto regular grid then take mean
+for jj=1:7,
+    for kk=1:length(year),
+        TF_basins(jj,kk) = nanmean(interp1(z,TF_basins_z(jj,:,kk),zreg,'linear',NaN));
+    end
+end
+
+% create rough spatial map of TF by taking naive depth mean
+TF = nanmean(TF,2);
+TF = squeeze(TF(:,1,:));
+
+% save
+save ECEarth3_ssp126.mat x y TF TF_basins year
 
 end
 
